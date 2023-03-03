@@ -4,7 +4,7 @@ import { WebSocketServer } from 'ws';
 import { ParseMessage as parseMessage } from 'mongodb-wp-proxy';
 import util from 'util';
 
-export function createWebSocketProxy(port = 1337) {
+export function createWebSocketProxy(port = 1337, cert = null) {
   const wsServer = new WebSocketServer({ port }, () => {
     console.log('ws server listening at %s', wsServer.options.port);
   });
@@ -41,10 +41,18 @@ export function createWebSocketProxy(port = 1337) {
           connectionOptions.host,
           connectionOptions.port
         );
-        socket = useTLS
-          ? tls.connect(connectionOptions)
+        const alwaysSecure = !!cert;
+        const secureConnectOptions = {
+          host: connectionOptions.host,
+          port: connectionOptions.port,
+          servername: connectionOptions.servername ?? connectionOptions.host,
+          ...(cert ? { cert: cert, key: cert } : {})
+        };
+        socket = alwaysSecure
+          ? tls.connect(secureConnectOptions)
           : net.createConnection(connectionOptions);
-        const connectEvent = useTLS ? 'secureConnect' : 'connect';
+        const connectEvent =
+          useTLS || alwaysSecure ? 'secureConnect' : 'connect';
         SOCKET_ERROR_EVENT_LIST.forEach((evt) => {
           socket.on(evt, (err) => {
             console.log('server socket error event (%s)', evt, err);

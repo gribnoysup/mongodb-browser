@@ -29,7 +29,7 @@
     "build": "webpack --mode=production",
     "build-dev": "webpack --mode=development",
     "start": "webpack serve --mode=development",
-    "start-proxy": "node -e \"require('@gribnoysup/mongodb-browser/proxy').createWebSocketProxy();\""
+    "start-proxy": "node -e \"try { require('./proxy.js'); } catch { require('@gribnoysup/mongodb-browser/proxy').createWebSocketProxy(); }\""
   },
   "keywords": [],
   "author": "Sergey Petushkov <sergey.petushkov@protonmail.com>",
