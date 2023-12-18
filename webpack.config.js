@@ -25,6 +25,9 @@ const shared = {
   },
   resolve: {
     alias: {
+      // to make sure we're always resolving the same version
+      bson: require.resolve('bson'),
+
       // alias to the prebundled package (used by dns polyfill)
       dohjs: require.resolve('dohjs/dist/doh.js'),
 
@@ -47,12 +50,19 @@ const shared = {
       os: 'os-browserify',
       // ---
 
+      // driver re-binds exported methods, and so we have to provide a polyfill
+      zlib: path.resolve(__dirname, 'src', 'zlib.ts'),
+
       // for this alias to work we need to compile for async generator
       // supporting environments (i.e., no babel runtime transforms)
       url: 'whatwg-url',
       // optional dep that we need to alias (otherwise empty module breaks the
       // driver code)
-      'bson-ext': 'bson'
+      'bson-ext': 'bson',
+
+      // optional encryption stuff
+      'gcp-metadata': false,
+      '@mongodb-js/saslprep': false
     },
     // `<package>: false` in fallback returns an empty module on import, in some
     // cases this can lead to unpredictable behavior (see bson-ext that we now
@@ -62,13 +72,13 @@ const shared = {
       fs: false,
       path: false,
       // compression
-      zlib: false,
       '@mongodb-js/zstd': false,
       snappy: false,
       'snappy/package.json': false,
       // encryption
       kerberos: false,
       'mongodb-client-encryption': false,
+      child_process: false,
       // used by aws auth method
       aws4: false,
       https: false,

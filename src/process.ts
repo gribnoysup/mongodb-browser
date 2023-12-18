@@ -22,4 +22,6 @@ _hrtime.bigint = (time?: [number, number]): bigint => {
 };
 (process as any).hrtime ??= _hrtime;
 (process as any).emitWarning ??= console.warn;
+(process as any).platform = 'Unknown';
+(process as any).arch = 'Unknown';
 export default process;
