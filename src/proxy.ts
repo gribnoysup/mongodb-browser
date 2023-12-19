@@ -1,5 +1,6 @@
 import net from 'net';
 import tls from 'tls';
+import dns from 'dns';
 import { WebSocketServer } from 'ws';
 import { ParseMessage as parseMessage } from 'mongodb-wp-proxy';
 import util from 'util';
@@ -35,24 +36,31 @@ export function createWebSocketProxy(port = 1337, cert = null) {
         const { tls: useTLS, ...connectionOptions } = JSON.parse(
           data.toString()
         );
+        const useSecureConnection = useTLS || !!cert;
         console.log(
           'setting up new%s connection to %s:%s',
-          useTLS ? ' secure' : '',
+          useSecureConnection ? ' secure' : '',
           connectionOptions.host,
           connectionOptions.port
         );
-        const alwaysSecure = !!cert;
-        const secureConnectOptions = {
+        const secureConnectOptions: tls.ConnectionOptions = {
           host: connectionOptions.host,
           port: connectionOptions.port,
           servername: connectionOptions.servername ?? connectionOptions.host,
+          // Copied from the driver code
+          lookup: (hostname, options, callback) => {
+            return dns.lookup(
+              hostname,
+              { verbatim: false, ...options },
+              callback
+            );
+          },
           ...(cert ? { cert: cert, key: cert } : {})
         };
-        socket = alwaysSecure
+        socket = useSecureConnection
           ? tls.connect(secureConnectOptions)
           : net.createConnection(connectionOptions);
-        const connectEvent =
-          useTLS || alwaysSecure ? 'secureConnect' : 'connect';
+        const connectEvent = useSecureConnection ? 'secureConnect' : 'connect';
         SOCKET_ERROR_EVENT_LIST.forEach((evt) => {
           socket.on(evt, (err) => {
             console.log('server socket error event (%s)', evt, err);

@@ -1,27 +1,46 @@
-import type dns from 'dns';
-import { DohResolver } from 'dohjs';
+import { query, wellknown, lookupTxt } from 'dns-query';
+import { promisify } from 'util';
 
-const resolver = new DohResolver('https://cloudflare-dns.com/dns-query');
+export function resolveSrv(hostname, cb) {
+  query(
+    { question: { type: 'SRV', name: hostname } },
+    { endpoints: wellknown.endpoints('doh') }
+  ).then(({ answers }) => {
+    cb(
+      null,
+      answers?.flatMap((answer) => {
+        if (answer.type === 'SRV') {
+          return {
+            ...answer.data,
+            name: answer.data.target
+          };
+        }
+        return [];
+      }) ?? []
+    );
+  }, cb);
+}
+export function resolveTxt(hostname, cb) {
+  lookupTxt(hostname, { endpoints: wellknown.endpoints('doh') }).then(
+    ({ entries }) => {
+      cb(
+        null,
+        entries.map((entry) => {
+          return [entry.data];
+        })
+      );
+    },
+    cb
+  );
+}
 
-export const promises: {
-  resolveSrv: typeof dns.promises['resolveSrv'];
-  resolveTxt: typeof dns.promises['resolveTxt'];
-} = {
-  async resolveSrv(hostname: string): Promise<dns.SrvRecord[]> {
-    const results = await resolver.query(hostname, 'SRV', 'POST', {
-      Accept: 'application/dns-message'
-    });
-    return results.answers.map((answer) => {
-      return {
-        ...answer.data,
-        name: answer.data.target
-      };
-    });
-  },
-  async resolveTxt(hostname: string): Promise<string[][]> {
-    const results = await resolver.query(hostname, 'TXT', 'POST', {
-      Accept: 'application/dns-message'
-    });
-    return results.answers.map((answer) => answer.data);
-  }
+export const promises = {
+  resolveSrv: promisify(resolveSrv),
+  resolveTxt: promisify(resolveTxt)
+};
+
+export default {
+  resolveSrv,
+  resolveTxt,
+  promises
 };

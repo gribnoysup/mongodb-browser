@@ -28,9 +28,6 @@ const shared = {
       // to make sure we're always resolving the same version
       bson: require.resolve('bson'),
 
-      // alias to the prebundled package (used by dns polyfill)
-      dohjs: require.resolve('dohjs/dist/doh.js'),
-
       // reimplemented to work in the browser
       dns: path.resolve(__dirname, 'src/dns.ts'),
 
@@ -107,7 +104,7 @@ module.exports = [
       alias: {
         ...shared.resolve.alias,
 
-        // // enable for debugging
+        // enable for debugging
         // mongodb: path.resolve(
         //   __dirname,
         //   'node-mongodb-native',
