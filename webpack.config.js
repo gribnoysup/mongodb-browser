@@ -59,7 +59,6 @@ const shared = {
 
       // optional encryption stuff
       'gcp-metadata': false,
-      '@mongodb-js/saslprep': false
     },
     // `<package>: false` in fallback returns an empty module on import, in some
     // cases this can lead to unpredictable behavior (see bson-ext that we now

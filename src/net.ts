@@ -46,7 +46,7 @@ export class Socket extends Duplex {
       this.emit('close');
     });
     this.ws.addEventListener('error', () => {
-      this.emit('error');
+      this.emit('error', 'WebSocket connection was closed due to an error');
     });
     this.ws.addEventListener('message', (ev) => {
       if (ev.data.charAt?.(0) === '{') {
